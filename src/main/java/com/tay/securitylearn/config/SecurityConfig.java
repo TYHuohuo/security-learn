@@ -1,9 +1,11 @@
 package com.tay.securitylearn.config;
 
+import com.tay.securitylearn.enums.UserPermission;
 import com.tay.securitylearn.enums.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -12,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+import static com.tay.securitylearn.enums.UserPermission.*;
 import static com.tay.securitylearn.enums.UserRole.*;
 
 /**
@@ -36,9 +40,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/","index","/css/*","/js").permitAll()
-                .antMatchers("/api/v1/student/*").hasRole(STUDENT.name())
+                .antMatchers("/api/v1/student/**").hasRole(STUDENT.name())
+                .antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.name())
+                .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.name())
+                .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.name())
+                .antMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), ADMIN_TRAINER.name())
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic();
@@ -49,16 +58,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected UserDetailsService userDetailsService() {
 
         UserDetails tayDetails = User.builder()
-                .username("tay")
-                .password(passwordEncoder.encode("tay123"))
-                .roles(STUDENT.name()) // ROLE_STUDENT
+                .username("anna")
+                .password(passwordEncoder.encode("1234"))
+                // 基于角色  ROLE_STUDENT
+                //.roles(STUDENT.name())
+                // 基于权限
+                .authorities(STUDENT.getGrantedAuthority())
                 .build();
 
         UserDetails jayDetails = User.builder()
-                .username("jay")
-                .password(passwordEncoder.encode("jay123456"))
-                .roles(ADMIN.name())
+                .username("linda")
+                .password(passwordEncoder.encode("1234"))
+                //.roles(ADMIN.name()) // ROLE_ADMIN
+                .authorities(ADMIN.getGrantedAuthority())
                 .build();
-        return new InMemoryUserDetailsManager(tayDetails, jayDetails);
+        UserDetails tomDetail = User.builder()
+                .username("tom")
+                .password(passwordEncoder.encode("1234"))
+                //.roles(ADMIN_TRAINER.name()) // ROLE_ADMIN_TRAINER
+                .authorities(ADMIN_TRAINER.getGrantedAuthority())
+                .build();
+        return new InMemoryUserDetailsManager(tayDetails, jayDetails, tomDetail);
     }
 }
