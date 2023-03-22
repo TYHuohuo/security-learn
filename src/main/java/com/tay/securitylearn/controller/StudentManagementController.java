@@ -3,6 +3,7 @@ package com.tay.securitylearn.controller;
 import com.google.common.collect.Lists;
 import com.tay.securitylearn.entity.Student;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,12 +26,15 @@ public class StudentManagementController {
             new Student(3, "Marry Jan")
     );
 
+
     @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_ADMIN_TRAINER')")
     public List<Student> getStudents() {
         return STUDENTS;
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('student:write')")
     public String addStudent(@RequestBody Student student) {
         log.info("student {}", student);
 
@@ -38,6 +42,7 @@ public class StudentManagementController {
     }
 
     @DeleteMapping(path = "{studentId}")
+    @PreAuthorize("hasAuthority('student:write')")
     public String deleteStudent(@PathVariable("studentId") Integer studentId) {
         log.info("studentId {}", studentId);
 
@@ -45,6 +50,7 @@ public class StudentManagementController {
     }
 
     @PutMapping(path = "{studentId}")
+    @PreAuthorize("hasAuthority('student:write')")
     public String updateStudent(@PathVariable("studentId")Integer studentId,
                                 @RequestBody Student student) {
         log.info("studentId {}", studentId);

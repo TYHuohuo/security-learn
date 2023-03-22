@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -28,6 +29,7 @@ import static com.tay.securitylearn.enums.UserRole.*;
  */
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private PasswordEncoder passwordEncoder;
 
@@ -50,10 +52,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.name())
                 .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.name())*/
                 // 基于权限
-                .antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
-                .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
-                .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
-                .antMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), ADMIN_TRAINER.name())
+//                .antMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+//                .antMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+//                .antMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+//                .antMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), ADMIN_TRAINER.name())
+
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic();
@@ -63,7 +66,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     protected UserDetailsService userDetailsService() {
 
-        UserDetails tayDetails = User.builder()
+        UserDetails annaDetails = User.builder()
                 .username("anna")
                 .password(passwordEncoder.encode("1234"))
                 // 基于角色  ROLE_STUDENT
@@ -72,18 +75,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorities(STUDENT.getGrantedAuthority())
                 .build();
 
-        UserDetails jayDetails = User.builder()
+        UserDetails lindaDetails = User.builder()
                 .username("linda")
                 .password(passwordEncoder.encode("1234"))
                 //.roles(ADMIN.name()) // ROLE_ADMIN
                 .authorities(ADMIN.getGrantedAuthority())
                 .build();
+
         UserDetails tomDetail = User.builder()
                 .username("tom")
                 .password(passwordEncoder.encode("1234"))
                 //.roles(ADMIN_TRAINER.name()) // ROLE_ADMIN_TRAINER
                 .authorities(ADMIN_TRAINER.getGrantedAuthority())
                 .build();
-        return new InMemoryUserDetailsManager(tayDetails, jayDetails, tomDetail);
+        return new InMemoryUserDetailsManager(annaDetails, lindaDetails, tomDetail);
     }
 }
