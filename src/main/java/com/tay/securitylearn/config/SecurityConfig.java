@@ -1,9 +1,9 @@
 package com.tay.securitylearn.config;
 
+import com.tay.securitylearn.enums.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import static com.tay.securitylearn.enums.UserRole.*;
 
 /**
  * <p>
@@ -36,10 +37,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/","index","/css/*","/js")
-                .permitAll()
-                .anyRequest()
-                .authenticated()
+                .antMatchers("/","index","/css/*","/js").permitAll()
+                .antMatchers("/api/v1/student/*").hasRole(STUDENT.name())
+                .anyRequest().authenticated()
                 .and()
                 .httpBasic();
     }
@@ -51,12 +51,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         UserDetails tayDetails = User.builder()
                 .username("tay")
                 .password(passwordEncoder.encode("tay123"))
-                .roles("STUDENT") // ROLE_STUDENT
+                .roles(STUDENT.name()) // ROLE_STUDENT
                 .build();
+
         UserDetails jayDetails = User.builder()
                 .username("jay")
                 .password(passwordEncoder.encode("jay123456"))
-                .roles("ADMIN")
+                .roles(ADMIN.name())
                 .build();
         return new InMemoryUserDetailsManager(tayDetails, jayDetails);
     }
