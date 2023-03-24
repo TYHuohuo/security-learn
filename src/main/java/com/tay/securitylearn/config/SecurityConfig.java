@@ -67,7 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     // 自定义 记住我 参数名称
                     .rememberMeParameter("remember-me")
                 .and()
-                // 退出登录，清楚cookie session等信息
+                // 退出登录，清除cookie session等信息
                 .logout()
                 .logoutUrl("/logout")
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
