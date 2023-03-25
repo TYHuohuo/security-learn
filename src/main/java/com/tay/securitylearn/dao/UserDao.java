@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface UserDao {
     /**
      * 根据用户名查找用户
+     * @param username 用户名称
      * @return
      */
     Optional<User> selectUserByUsername(String username);
