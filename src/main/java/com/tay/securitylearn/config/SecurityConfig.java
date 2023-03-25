@@ -1,5 +1,8 @@
 package com.tay.securitylearn.config;
 
+import com.tay.securitylearn.jwt.JwtConfig;
+import com.tay.securitylearn.jwt.JwtTokenVerifier;
+import com.tay.securitylearn.jwt.JwtUsernamePasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,11 +12,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import java.util.concurrent.TimeUnit;
+import javax.crypto.SecretKey;
 
 import static com.tay.securitylearn.enums.UserRole.*;
 
@@ -30,12 +33,16 @@ import static com.tay.securitylearn.enums.UserRole.*;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private PasswordEncoder passwordEncoder;
+    private final SecretKey secretKey;
+    private final JwtConfig jwtConfig;
 
     private final UserDetailsService userDetailsService;
 
     @Autowired
-    public SecurityConfig(PasswordEncoder passwordEncoder, UserDetailsService userDetailsService) {
+    public SecurityConfig(PasswordEncoder passwordEncoder, SecretKey secretKey, JwtConfig jwtConfig, UserDetailsService userDetailsService) {
         this.passwordEncoder = passwordEncoder;
+        this.secretKey = secretKey;
+        this.jwtConfig = jwtConfig;
         this.userDetailsService = userDetailsService;
     }
 
@@ -44,35 +51,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
+                .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                // token登录配置
+                .addFilter(new JwtUsernamePasswordAuthenticationFilter(authenticationManager(), jwtConfig, secretKey))
+                // token校验过滤器
+                .addFilterAfter(new JwtTokenVerifier(secretKey, jwtConfig), JwtUsernamePasswordAuthenticationFilter.class)
                 .authorizeRequests()
                 // 配置有前后顺序区别，配置需要注意前后顺序
                 .antMatchers("/","index","/css/*","/js").permitAll()
                 .antMatchers("/api/v1/student/**").hasRole(STUDENT.name())
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                    .loginPage("/login")
-                    .permitAll()
-                    // 默认登录成功页
-                    .defaultSuccessUrl("/courses", true)
-                    // 自定义 用户名、密码 参数名称
-                    .passwordParameter("password")
-                    .usernameParameter("username")
-                .and()
-                .rememberMe()
-                    .tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21))
-                    .key("security-important-key")
-                    // 自定义 记住我 参数名称
-                    .rememberMeParameter("remember-me")
-                .and()
-                // 退出登录，清除cookie session等信息
-                .logout()
-                .logoutUrl("/logout")
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
-                .clearAuthentication(true)
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID", "remember-me")
-                .logoutSuccessUrl("/login");
+                .anyRequest()
+                .authenticated();
+
     }
 
     @Override

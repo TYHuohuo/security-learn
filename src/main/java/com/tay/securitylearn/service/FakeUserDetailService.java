@@ -32,7 +32,7 @@ public class FakeUserDetailService implements UserDao {
 
     public List<User> getUsers() {
         List<User> users = Lists.newArrayList(
-                new User("anan",
+                new User("anna",
                         passwordEncoder.encode("1234"),
                         true,
                         true,
